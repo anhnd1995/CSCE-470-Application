@@ -10,10 +10,8 @@
   <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <script src="../../lib/core/Core.js"></script>
-  <script src="../../lib/core/AbstractManager.js"></script>
-  <script src="../../lib/managers/Manager.jquery.js"></script>
   <style>
+  
   body {
       font: 400 15px Lato, sans-serif;
       line-height: 1.8;
@@ -53,16 +51,7 @@
       color: #04073a;
       font-size: 200px;
   }
-  .thumbnail {
-      padding: 0 0 15px 0;
-      border: none;
-      border-radius: 0;
-  }
-  .thumbnail img {
-      width: 100%;
-      height: 100%;
-      margin-bottom: 10px;
-  }
+
   .carousel-control.right, .carousel-control.left {
       background-image: none;
       color: #04073a;
@@ -91,11 +80,7 @@
   .panel:hover {
       box-shadow: 5px 0px 40px rgba(0,0,0, .2);
   }
-  .panel-footer .btn:hover {
-      border: 1px solid #f4511e;
-      background-color: #fff !important;
-      color: #f4511e;
-  }
+
   .panel-heading {
       color: #fff !important;
       background-color: #04073a !important;
@@ -106,21 +91,7 @@
       border-bottom-left-radius: 0px;
       border-bottom-right-radius: 0px;
   }
-  .panel-footer {
-      background-color: white !important;
-  }
-  .panel-footer h3 {
-      font-size: 32px;
-  }
-  .panel-footer h4 {
-      color: #aaa;
-      font-size: 14px;
-  }
-  .panel-footer .btn {
-      margin: 15px 0;
-      background-color: #04073a;
-      color: #fff;
-  }
+
   .navbar {
       margin-bottom: 0;
       background-color: #04073a;
@@ -143,11 +114,7 @@
       border-color: transparent;
       color: #fff !important;
   }
-  footer .glyphicon {
-      font-size: 20px;
-      margin-bottom: 20px;
-      color: #04073a;
-  }
+
   .slideanim {visibility:hidden;}
   .slide {
       animation-name: slide;
@@ -216,14 +183,16 @@
 <div class="jumbotron text-center">
   <h1>GG</h1> 
   <p>A Complete Non-Commercialized Game Listing</p> 
-  <form>
     <div class="input-group" >
-      <input type="search" class="form-control" size="50" placeholder="Games" required>
+      <input id="query" name="query" class="form-control" size="50" placeholder="Games" />
       <div class="input-group-btn">
-        <button type="button" class="btn btn-primary">Search</button>
+        <button id="search" class="btn btn-primary">Search</button>
       </div>
     </div>
-  </form>
+</div>
+
+<!-- Container (Services Section) -->
+<div id="results" class="container-fluid text-center">
 </div>
 
 <!-- Container (Services Section) -->
@@ -259,6 +228,9 @@
 <div id="about" class="container-fluid text-center">
   <div class="row">
      <div class="col-sm-4">
+		<br>
+		<br>
+		<br>
       <span class="glyphicon glyphicon-user logo -small"></span>
     </div>
     <div class="col-sm-6">
@@ -310,6 +282,50 @@ $(document).ready(function(){
     });
   });
 })
+</script>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script>
+    function on_data(data) {
+        $('#results').empty();
+        var docs = data.response.docs;
+        $.each(docs, function(i, item) {
+            $('#results').prepend($('<div class="col-sm-4"> <h4> '+ item.price + '</h4></div> <br>'));
+			$('#results').prepend($('<div class="col-sm-4"> <h4> '+ item.id + '</h4></div>'));
+			$('#results').prepend($('<div class="col-sm-4"> <h4> <b>'+ item.app_name + '</b></h4></div>'));
+        });
+
+        var total = 'Found results';
+			$('#results').prepend($('<hr width="1000" size="10">'));
+			$('#results').prepend($('<div class="col-sm-4"> <h2> <b> PRICE </b> </h2></div>'));
+			$('#results').prepend($('<div class="col-sm-4"> <h2> <b> ID </b> </h2></div>'));
+			$('#results').prepend($('<div class="col-sm-4"> <h2> <b> NAME </b> </h2></div>'));
+        $('#results').prepend('<div> <span class="glyphicon glyphicon-search logo-small"></span> <h2>' + total + '</div> </h2>');
+    }
+
+    function on_search() {
+        var query = $('#query').val();
+        if (query.length == 0) {
+			var url='http://localhost:8983/solr/Games/select?q=app_name:*&version=2.2&sort=id asc&start=0&rows=100&indent=on&wt=json&callback=?&json.wrf=on_data';
+			$.getJSON(url);
+            return;
+        }
+
+        var url='http://localhost:8983/solr/Games/select?q=app_name:'+query+'&version=2.2&start=0&rows=100&indent=on&wt=json&callback=?&json.wrf=on_data';
+        $.getJSON(url);
+    }
+
+    function on_ready() {
+        $('#search').click(on_search);
+        /* Hook enter to search */
+        $('body').keypress(function(e) {
+            if (e.keyCode == '13') {
+                on_search();
+            }
+        });
+    }
+
+    $(document).ready(on_ready);
 </script>
 
 </body>
